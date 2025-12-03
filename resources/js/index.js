@@ -178,85 +178,88 @@ document.addEventListener('livewire:init', () => {
                             }
                         });
 
-                    // Load existing GeoJSON if available
-                    const existingGeoJson = this.getGeoJson();
-                    if (existingGeoJson) {
-                            this.drawItems = LF.geoJSON(existingGeoJson, {
-                                pointToLayer: (feature, latlng) => {
-                                    if (feature.properties && feature.properties.type === "Circle") {
+                    this.loadExistingGeojson()
+                }
+            },
+            loadExistingGeojson: function() {
+                // Load existing GeoJSON if available
+                const existingGeoJson = this.getGeoJson();
+                if (existingGeoJson) {
+                    this.drawItems = LF.geoJSON(existingGeoJson, {
+                        pointToLayer: (feature, latlng) => {
+                            if (feature.properties && feature.properties.type === "Circle") {
 
-                                        const circle = LF.circle(latlng, {
-                                            radius: feature.properties.radius,
-                                            color: config.geoMan.color || "#3388ff",
-                                            fillColor: config.geoMan.filledColor || '#cad9ec',
-                                            fillOpacity: 0.4
-                                        });
-
-                                        circle.circleData = {
-                                            center: latlng,
-                                            radius: feature.properties.radius
-                                        };
-
-                                        return circle;
-                                    }
-
-                                    return LF.circleMarker(latlng, {
-                                        radius: 15,
-                                        color: '#3388ff',
-                                        fillColor: '#3388ff',
-                                        fillOpacity: 0.6
-                                    });
-                                },
-                                style: function(feature) {
-                                    if (feature.geometry.type === 'Polygon') {
-                                        return {
-                                            color: config.geoMan.color || "#3388ff",
-                                            fillColor: config.geoMan.filledColor || 'blue',
-                                            weight: 2,
-                                            fillOpacity: 0.4
-                                        };
-                                    }
-                                },
-                                onEachFeature: (feature, layer) => {
-
-                                    if (typeof feature.properties.title != "undefined") {
-                                        layer.bindPopup(feature.properties.title);
-                                    }else if (feature.geometry.type === 'Polygon') {
-                                        layer.bindPopup("Polygon Area");
-                                    } else if (feature.geometry.type === 'Point') {
-                                        layer.bindPopup("Point Location");
-                                    }
-
-
-                                    if (config.geoMan.editable) {
-                                        if (feature.geometry.type === 'Polygon') {
-                                            layer.pm.enable({
-                                                allowSelfIntersection: false
-                                            });
-                                        } else if (feature.geometry.type === 'Point') {
-                                            layer.pm.enable({
-                                                draggable: true
-                                            });
-                                        }
-                                    }
-
-                                    layer.on('pm:edit', () => {
-                                        this.updateGeoJson();
-                                    });
-                                }
-                            }).addTo(this.map);
-
-                            if(config.geoMan.editable){
-
-                                this.drawItems.eachLayer(layer => {
-                                    layer.pm.enable({
-                                        allowSelfIntersection: false,
-                                    });
+                                const circle = LF.circle(latlng, {
+                                    radius: feature.properties.radius,
+                                    color: config.geoMan.color || "#3388ff",
+                                    fillColor: config.geoMan.filledColor || '#cad9ec',
+                                    fillOpacity: 0.4
                                 });
+
+                                circle.circleData = {
+                                    center: latlng,
+                                    radius: feature.properties.radius
+                                };
+
+                                return circle;
                             }
 
-                            this.map.fitBounds(this.drawItems.getBounds());
+                            return LF.circleMarker(latlng, {
+                                radius: 15,
+                                color: '#3388ff',
+                                fillColor: '#3388ff',
+                                fillOpacity: 0.6
+                            });
+                        },
+                        style: function(feature) {
+                            if (feature.geometry.type === 'Polygon') {
+                                return {
+                                    color: config.geoMan.color || "#3388ff",
+                                    fillColor: config.geoMan.filledColor || 'blue',
+                                    weight: 2,
+                                    fillOpacity: 0.4
+                                };
+                            }
+                        },
+                        onEachFeature: (feature, layer) => {
+
+                            if (typeof feature.properties.title != "undefined") {
+                                layer.bindPopup(feature.properties.title);
+                            }else if (feature.geometry.type === 'Polygon') {
+                                layer.bindPopup("Polygon Area");
+                            } else if (feature.geometry.type === 'Point') {
+                                layer.bindPopup("Point Location");
+                            }
+
+
+                            if (config.geoMan.editable) {
+                                if (feature.geometry.type === 'Polygon') {
+                                    layer.pm.enable({
+                                        allowSelfIntersection: false
+                                    });
+                                } else if (feature.geometry.type === 'Point') {
+                                    layer.pm.enable({
+                                        draggable: true
+                                    });
+                                }
+                            }
+
+                            layer.on('pm:edit', () => {
+                                this.updateGeoJson();
+                            });
+                        }
+                    }).addTo(this.map);
+
+                    if(config.geoMan.editable){
+
+                        this.drawItems.eachLayer(layer => {
+                            layer.pm.enable({
+                                allowSelfIntersection: false,
+                            });
+                        });
                     }
+
+                    this.map.fitBounds(this.drawItems.getBounds());
                 }
             },
             createMarkerIcon() {
@@ -538,6 +541,7 @@ document.addEventListener('livewire:init', () => {
             refreshMap: function() {
                 this.map.flyTo(this.getCoordinates());
                 this.updateMarker();
+                this.loadExistingGeojson()
             }
         };
     };
